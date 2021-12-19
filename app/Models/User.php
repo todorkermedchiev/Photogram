@@ -81,4 +81,9 @@ class User extends Authenticatable
     {
         return $this->userNotifications()->where('seen', '=', 0)->count();
     }
+    
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
 }
