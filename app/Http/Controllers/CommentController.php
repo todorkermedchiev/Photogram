@@ -15,22 +15,21 @@ class CommentController extends Controller
      * @param  \App\Http\Requests\StoreCommentRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(StoreCommentRequest $request)//, Post $post)
+    public function store(StoreCommentRequest $request, Post $post)
     {
         $validated = $request->validated();
         $comment = new Comment();
         $comment->text = strip_tags($validated['text']);
         $comment->user()->associate(auth()->user());
-//        $comment->post()->associate(auth()->user()->posts());
-//        $comment->saveOrFail();
+        $comment->post()->associate($post);
         try {
             $comment->saveOrFail();
         } catch (\Throwable $ex) {
-//            if ($comment->id) {
-//                $comment->delete();
-//            }           
-            return redirect()->back();
+            if ($comment->id) {
+                $comment->delete();
+            }           
         }
+        return redirect()->back();
     }
 
     /**
@@ -41,9 +40,6 @@ class CommentController extends Controller
      */
     public function destroy(Comment $comment)
     {
-        if ($request->user()->cannot('delete', $comment)) {
-            abort(403);
-        }
-        $comment->delete();
+        return json_encode(['result' => $comment->delete() ? 'true' : 'false']);
     }
 }
