@@ -6,6 +6,7 @@ use App\Models\Comment;
 use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\UpdateCommentRequest;
 use App\Models\Post;
+use App\Events\NewCommentEvent;
 
 class CommentController extends Controller
 {
@@ -29,6 +30,10 @@ class CommentController extends Controller
                 $comment->delete();
             }           
         }
+          
+        
+        NewCommentEvent::dispatch($comment);
+        
         return redirect()->back();
     }
 
