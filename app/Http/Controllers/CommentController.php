@@ -7,6 +7,7 @@ use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\UpdateCommentRequest;
 use App\Models\Post;
 use App\Events\NewCommentEvent;
+use Illuminate\Http\Request;
 
 class CommentController extends Controller
 {
@@ -25,15 +26,10 @@ class CommentController extends Controller
         $comment->post()->associate($post);
         try {
             $comment->saveOrFail();
+            NewCommentEvent::dispatch($comment);
         } catch (\Throwable $ex) {
-            if ($comment->id) {
-                $comment->delete();
-            }           
+            return redirect()->back()->withErrors([$ex->getMessage()]);
         }
-          
-        
-        NewCommentEvent::dispatch($comment);
-        
         return redirect()->back();
     }
 
@@ -43,8 +39,11 @@ class CommentController extends Controller
      * @param  \App\Models\Comment  $comment
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Comment $comment)
+    public function destroy(Request $request, Comment $comment)
     {
-        return json_encode(['result' => $comment->delete() ? 'true' : 'false']);
+        if ($request->user()->cannot('delete', $comment)) {
+            abort(403);
+        }
+        return ['result' => $comment->delete()];
     }
 }
